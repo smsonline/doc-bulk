@@ -314,9 +314,23 @@ html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 #import os
 #sys.path.append(os.path.join(os.path.dirname(__file__), ))
 #from directives.include_template import Author
+def source_read_handler(app, docname, source):
+    import re, sys, codecs
+    include_matches = re.findall(r'(\{\% include ([^\%]+) \%\})', source[0])
+    for match in include_matches:
+        try:
+            template_file = codecs.open(match[1], 'r', 'utf-8')
+            template_data = template_file.read()
+            template_data = re.sub('(<!--.*?-->\s*)', '', template_data, flags=re.MULTILINE|re.DOTALL)
+            source[0] = source[0].replace(match[0], template_data)
+        except:
+            print(sys.exc_info())
+            pass
+
+
 
 def setup(app):
     # app.add_directive('codeauthor2', Author)
     app.add_stylesheet('theme_overrides.css')
-
+    app.connect('source-read', source_read_handler)
 
